@@ -2,13 +2,12 @@
 //  MJ FOODS ENTERPRISES — FRONTEND API WRAPPER (MySQL / Express)
 // ═══════════════════════════════════════════════════════════════════
 
-// Smart URL Detection:
-// Use localhost for local testing, change to api.mjfoods.in for live production
+// Use localhost for testing, change to mj-foods-backend.onrender.com for live production
 const API_BASE = (
     window.location.hostname === 'localhost' || 
     window.location.hostname === '127.0.0.1' || 
     window.location.hostname.startsWith('192.168.')
-) ? 'http://localhost:3000/api' : 'https://api.mjfoods.in/api'; 
+) ? 'http://localhost:3000/api' : 'https://mj-foods-backend.onrender.com/api'; 
 
 const DB = {
     // ── SALES & BILLING ───────────────────────────────────────────────────

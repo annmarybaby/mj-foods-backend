@@ -13,10 +13,12 @@ app.use(bodyParser.json({ limit: '50mb' }));
 
 // 1. DATABASE CONNECTION POOL
 const pool = mysql.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: 'your_password_here', // Update this to your local password
-    database: 'mj_foods_bakery',
+    host:     process.env.DB_HOST || 'localhost',
+    port:     process.env.DB_PORT || 3306,
+    user:     process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'mj_foods_bakery',
+    ssl:      process.env.DB_HOST ? { rejectUnauthorized: false } : null,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
