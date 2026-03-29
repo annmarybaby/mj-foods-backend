@@ -408,4 +408,5 @@ window.toggleShareMenu = (e) => {
     menu.style.display = menu.style.display === 'flex' || menu.style.display === 'block' ? 'none' : 'block';
 };
 
+window.initBilling = initBilling;
 document.addEventListener('DOMContentLoaded', initBilling);
