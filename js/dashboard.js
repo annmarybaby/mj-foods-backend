@@ -1,15 +1,42 @@
 let currentProfitPeriod = 'today';
 
-window.refreshDashboard = function() {
+window.refreshDashboard = async function() {
     const dashboardView = document.getElementById('view-dashboard');
     if (!dashboardView) return;
 
     // ── Data ──────────────────────────────────────────────────────────────────
-    const sales      = JSON.parse(localStorage.getItem('mj_sales')       || '[]');
-    const exps       = JSON.parse(localStorage.getItem('mj_expenses')     || '[]');
-    const salaryLogs = JSON.parse(localStorage.getItem('mj_emp_ledger')   || '[]');
-    const receipts   = JSON.parse(localStorage.getItem('mj_receipts')     || '[]');
-    const now        = new Date();
+    // 1. First, show what we have in cache immediately
+    renderView(
+        JSON.parse(localStorage.getItem('mj_sales') || '[]'),
+        JSON.parse(localStorage.getItem('mj_expenses') || '[]'),
+        JSON.parse(localStorage.getItem('mj_emp_ledger') || '[]'),
+        JSON.parse(localStorage.getItem('mj_receipts') || '[]')
+    );
+
+    // 2. Then, fetch fresh data from the Cloud
+    if (window.DB) {
+        try {
+            const [sales, exps] = await Promise.all([
+                window.DB.getSales(),
+                window.DB.getExpenses()
+            ]);
+            // Re-render with the latest Cloud data
+            renderView(
+                sales, 
+                exps, 
+                JSON.parse(localStorage.getItem('mj_emp_ledger') || '[]'),
+                JSON.parse(localStorage.getItem('mj_receipts') || '[]')
+            );
+        } catch (e) {
+            console.warn("⚠️ Dashboard could not sync with cloud.", e);
+        }
+    }
+};
+
+function renderView(sales, exps, salaryLogs, receipts) {
+    const dashboardView = document.getElementById('view-dashboard');
+    if (!dashboardView) return;
+    const now = new Date();
     
     // Normalize "now" to midnight for consistent "Today" comparison
     const todayStr = now.toDateString();
