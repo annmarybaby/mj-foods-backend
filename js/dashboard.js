@@ -72,23 +72,26 @@ function renderView(sales, exps, salaryLogs, receipts) {
         return false;
     };
 
-    // Calculate Sales
-    const filteredSales = sales.filter(s => isInPeriod(s, currentProfitPeriod));
+    // Today specific stats
+    const tSales = Array.isArray(sales) ? sales : [];
+    const tExps = Array.isArray(exps) ? exps : [];
+    const tSalary = Array.isArray(salaryLogs) ? salaryLogs : [];
+    const tReceipts = Array.isArray(receipts) ? receipts : [];
+
+    const filteredSales = tSales.filter(s => isInPeriod(s, currentProfitPeriod));
     const periodSalesTotal = filteredSales.reduce((a, c) => a + (parseFloat(c.total) || 0), 0);
 
-    // Calculate Expenses
-    const pUnitExpsTotal = exps.filter(e => isInPeriod(e, currentProfitPeriod)).reduce((a, c) => a + (Math.abs(parseFloat(c.amt)) || 0), 0);
-    const pSalariesTotal = salaryLogs.filter(s => isInPeriod(s, currentProfitPeriod)).reduce((a, c) => a + (Math.abs(parseFloat(c.paid)) || 0), 0);
-    const pReceiptsTotal = receipts.filter(r => isInPeriod(r, currentProfitPeriod)).reduce((a, c) => a + (Math.abs(parseFloat(c.amt)) || 0), 0);
+    const pUnitExpsTotal = tExps.filter(e => isInPeriod(e, currentProfitPeriod)).reduce((a, c) => a + (Math.abs(parseFloat(c.amt)) || 0), 0);
+    const pSalariesTotal = tSalary.filter(s => isInPeriod(s, currentProfitPeriod)).reduce((a, c) => a + (Math.abs(parseFloat(c.paid)) || 0), 0);
+    const pReceiptsTotal = tReceipts.filter(r => isInPeriod(r, currentProfitPeriod)).reduce((a, c) => a + (Math.abs(parseFloat(c.amt)) || 0), 0);
 
     const totalPeriodExps = pUnitExpsTotal + pSalariesTotal + pReceiptsTotal;
     const periodProfit = periodSalesTotal - totalPeriodExps;
 
-    // Today specific stats
-    const todaySalesTotal = sales.filter(s => isInPeriod(s, 'today')).reduce((a, c) => a + (parseFloat(c.total) || 0), 0);
-    const pendingSalesTotal = sales.filter(s => s.status === 'Pending').reduce((a, c) => a + (parseFloat(c.total) || 0), 0);
+    const todaySalesTotal = tSales.filter(s => isInPeriod(s, 'today')).reduce((a, c) => a + (parseFloat(c.total) || 0), 0);
+    const pendingSalesTotal = tSales.filter(s => s.status === 'Pending').reduce((a, c) => a + (parseFloat(c.total) || 0), 0);
 
-    const allOrders = sales.slice().sort((a,b) => b.timestamp - a.timestamp);
+    const allOrders = tSales.slice().sort((a,b) => b.timestamp - a.timestamp);
     const recentSalesHtml = allOrders.map((s, idx) => {
         const dateObj = new Date(s.timestamp);
         const dateStr = dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
