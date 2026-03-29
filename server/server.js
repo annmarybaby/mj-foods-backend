@@ -101,7 +101,15 @@ app.get('/api/shops', async (req, res) => {
 
 // 3. START SERVER
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`🚀 MJ FOODS API RUNNING AT: http://localhost:${PORT}`);
-    console.log(`📁 Database: mj_foods_bakery`);
+    console.log(`📁 Database: ${process.env.DB_NAME || 'test'}`);
+    
+    // Quick Connection Test
+    try {
+        await pool.query('SELECT 1');
+        console.log('✅ MySQL Cloud Connected Successfully!');
+    } catch (err) {
+        console.error('❌ MySQL Cloud Connection Failed:', err.message);
+    }
 });
