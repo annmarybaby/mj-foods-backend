@@ -167,8 +167,18 @@ window.showShopSelectionModal = async function() {
     const shops = await getShops();
     const modal = document.getElementById('shop-init-modal');
     if (!modal) return;
+    
+    // Add HARDCODED FALLBACKS for reliability
+    if (!shops.airport || shops.airport.length === 0) {
+        shops.airport = DEFAULT_AIRPORT_SHOPS;
+    }
+    if (!shops.town || shops.town.length === 0) {
+        shops.town = ['Regular Town', 'Downtown Outlet', 'Bakery Main'];
+    }
+
     modal.style.display = 'flex';
-    document.getElementById('route-shop-search').value = '';
+    const search = document.getElementById('route-shop-search');
+    if (search) search.value = '';
     window.renderRouteLists(shops);
 };
 
