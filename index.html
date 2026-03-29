@@ -17,7 +17,22 @@
 </head>
 
 <body class="dark-theme">
-    <div class="app-container">
+    <!-- Auth Protection Overlay -->
+    <div id="auth-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#0a0e14;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+        <div class="card" style="width:100%;max-width:400px;text-align:center;padding:40px;box-shadow:0 20px 50px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.05);">
+            <img src="https://i.ibb.co/vzG74K5/mj-logo.png" style="width:80px;margin-bottom:20px;filter:drop-shadow(0 0 10px rgba(16,185,129,0.3));">
+            <h2 style="margin-bottom:10px;color:white;">MJ Foods Admin</h2>
+            <p style="color:#64748b;font-size:0.9rem;margin-bottom:30px;">Enter Admin Password to continue</p>
+            <div class="form-group" style="text-align:left;">
+                <input type="password" id="admin-pass" placeholder="••••••••" style="width:100%;height:50px;background:#151b23;border:1px solid #30363d;border-radius:8px;padding:0 15px;color:white;font-size:1.1rem;margin-bottom:20px;outline:none;text-align:center;letter-spacing:5px;">
+            </div>
+            <button onclick="window.checkAuth()" class="btn btn-primary" style="width:100%;height:50px;font-weight:700;font-size:1rem;box-shadow:0 0 20px rgba(16,185,129,0.2);">Login to Portal</button>
+            <p id="auth-error" style="color:#ef4444;font-size:0.85rem;margin-top:15px;display:none;">⚠️ Invalid password. Please try again.</p>
+        </div>
+        <p style="margin-top:30px;color:#334155;font-size:0.75rem;">MJ Foods © 2026 | Private Access Only</p>
+    </div>
+
+    <div class="app-container" id="main-app" style="display:none;">
         <!-- Sidebar -->
         <nav class="sidebar glass-panel">
             <div class="brand" style="display: flex; align-items: center; gap: 14px; padding: 0 12px 32px 12px;">
@@ -52,7 +67,7 @@
                 </li>
             </ul>
 
-            <div class="sidebar-footer">
+            <div class="sidebar-footer" onclick="window.logout()" style="cursor:pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
                 <div class="user-profile">
                     <div class="avatar"
                         style="background: linear-gradient(135deg, var(--accent-blue), #1e40af); box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);">
@@ -61,19 +76,11 @@
                         <span class="name"
                             style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">MJ
                             Enterprises</span>
-                        <span class="role">Admin Portal</span>
+                        <span class="role" style="color:#ef4444; font-weight:bold; font-size:0.75rem;">LOGOUT PORTAL</span>
                     </div>
-                    <div class="profile-actions"
-                        style="color: var(--text-muted); display: flex; align-items: center; padding: 4px; border-radius: 6px; transition: background 0.2s, color 0.2s;"
-                        onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.color='var(--text-primary)'"
-                        onmouseout="this.style.background='transparent'; this.style.color='var(--text-muted)'">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="1.5"></circle>
-                            <circle cx="12" cy="5" r="1.5"></circle>
-                            <circle cx="12" cy="19" r="1.5"></circle>
-                        </svg>
-                    </div>
+                    <i data-lucide="log-out" style="width:16px; color:#64748b; margin-left:10px;"></i>
+                </div>
+            </div>
                 </div>
             </div>
         </nav>
@@ -153,6 +160,33 @@
     <script>
         // Initialize Lucide Icons
         lucide.createIcons();
+    </script>
+    <!-- Auth Logic -->
+    <script>
+        window.checkAuth = function() {
+            const pass = document.getElementById('admin-pass').value;
+            if (pass === 'mjfoods2026') {
+                sessionStorage.setItem('mj_auth', 'true');
+                document.getElementById('auth-overlay').style.display = 'none';
+                document.getElementById('main-app').style.display = 'flex';
+                if (window.refreshDashboard) window.refreshDashboard();
+            } else {
+                const err = document.getElementById('auth-error');
+                err.style.display = 'block';
+                setTimeout(() => err.style.display = 'none', 3000);
+            }
+        };
+
+        // Auto-check on load
+        if (sessionStorage.getItem('mj_auth') === 'true') {
+            document.getElementById('auth-overlay').style.display = 'none';
+            document.getElementById('main-app').style.display = 'flex';
+        }
+
+        window.logout = function() {
+            sessionStorage.removeItem('mj_auth');
+            window.location.reload();
+        };
     </script>
 </body>
 
