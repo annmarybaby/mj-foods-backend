@@ -121,6 +121,10 @@ app.delete('/api/employees/:id', async (req, res) => {
 });
 
 /** ──────────────── SHOP ROUTES ──────────────── */
+app.get('/', (req, res) => {
+    res.send('<h1>✅ MJ Foods Cloud Server: ONLINE</h1><p>Database: Connected to TiDB Singapore</p>');
+});
+
 app.get('/api/shops', async (req, res) => {
     try {
         const [rows] = await pool.query('SELECT * FROM shops ORDER BY route, name ASC');
