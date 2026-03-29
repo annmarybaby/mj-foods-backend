@@ -64,10 +64,12 @@ const DB = {
     async getExpenses() {
         try {
             const res = await fetch(`${API_BASE}/expenses`);
+            if (!res.ok) throw new Error('API Offline');
             const data = await res.json();
             localStorage.setItem('mj_expenses', JSON.stringify(data));
             return data;
         } catch (e) {
+            console.warn("⚠️ API Offline (Expenses). Using cache.");
             return JSON.parse(localStorage.getItem('mj_expenses') || '[]');
         }
     },
@@ -95,10 +97,12 @@ const DB = {
     async getEmployees() {
         try {
             const res = await fetch(`${API_BASE}/employees`);
+            if (!res.ok) throw new Error('API Offline');
             const data = await res.json();
             localStorage.setItem('mj_employees', JSON.stringify(data));
             return data;
         } catch (e) {
+            console.warn("⚠️ API Offline (Employees). Using cache.");
             return JSON.parse(localStorage.getItem('mj_employees') || '[]');
         }
     },
