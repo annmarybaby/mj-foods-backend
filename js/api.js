@@ -29,10 +29,11 @@ const DB = {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    shop_name: sale.shop,
-                    total_amount: sale.total,
-                    status: sale.status || 'Pending',
-                    items: sale.items
+                    timestamp: sale.timestamp || Date.now(),
+                    shop: sale.shop,
+                    items: sale.items,
+                    total: sale.total,
+                    status: sale.status || 'Pending'
                 })
             });
             return await res.json();
@@ -76,8 +77,9 @@ const DB = {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    timestamp: exp.timestamp || Date.now(),
                     category: exp.category,
-                    amount: exp.amt,
+                    amt: exp.amt,
                     note: exp.note
                 })
             });
@@ -107,9 +109,9 @@ const DB = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name: emp.name,
-                    role: emp.role,
-                    daily_wage: emp.daily_wage,
-                    id_photo: emp.id_photo
+                    role: emp.role || 'Staff',
+                    salary_type: emp.salary_type || 'Daily',
+                    base_salary: emp.daily_wage || emp.base_salary || 0
                 })
             });
         } catch (e) { console.error("❌ Failed to save employee to MySQL."); }

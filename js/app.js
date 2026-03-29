@@ -1,5 +1,40 @@
-// Global State & Navigation
+window.initMobileNavigation = function() {
+    const sidebar = document.querySelector('.sidebar');
+    const toggle = document.getElementById('sidebar-toggle');
+    const overlay = document.getElementById('sidebar-overlay');
+
+    if (toggle) {
+        toggle.onclick = (e) => {
+            e.stopPropagation();
+            const isOpen = sidebar.classList.toggle('open');
+            if (overlay) {
+                if (isOpen) overlay.classList.add('active');
+                else overlay.classList.remove('active');
+            }
+        };
+    }
+
+    if (overlay) {
+        overlay.onclick = () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+        };
+    }
+
+    // Close on nav click
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            if (window.innerWidth <= 1024) {
+                sidebar.classList.remove('open');
+                if (overlay) overlay.classList.remove('active');
+            }
+        });
+    });
+};
+
 document.addEventListener('DOMContentLoaded', () => {
+    window.initMobileNavigation();
+    
     // Navigation
     const navItems = document.querySelectorAll('.nav-item');
     const views = document.querySelectorAll('.view');
@@ -22,15 +57,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // Update Title
-            viewTitle.textContent = item.querySelector('.text').textContent;
+            // Transitioning views: Always clear mobile state
+            const sidebarEl = document.querySelector('.sidebar');
+            const overlayEl = document.getElementById('sidebar-overlay');
+            if (sidebarEl) sidebarEl.classList.remove('open');
+            if (overlayEl) overlayEl.classList.remove('active');
 
-            // Mobile: Close Sidebar on Link Click
-            if (window.innerWidth <= 768) {
-                document.querySelector('.sidebar').classList.remove('open');
-            }
+            // Update Header Title
+            if (viewTitle) viewTitle.textContent = item.querySelector('.text').textContent;
 
-            // Trigger view-specific refresh if needed
+            // Trigger view-specific refresh if needed...
             if (targetId === 'view-dashboard' && window.refreshDashboard) {
                 window.refreshDashboard();
             } else if (targetId === 'view-history' && window.initHistory) {
@@ -41,40 +77,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.initEmployees();
             } else if (targetId === 'view-billing' && window.initBilling) {
                 window.initBilling();
-            } else if (targetId === 'view-database' && window.initDatabase) {
-                window.initDatabase();
             }
         });
     });
 
-    // Mobile Sidebar Toggle
-    const sidebarToggle = document.getElementById('sidebar-toggle');
-    const sidebar = document.querySelector('.sidebar');
-    const overlay = document.getElementById('sidebar-overlay');
-
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('open');
-        });
-    }
-
-    if (overlay) {
-        overlay.addEventListener('click', () => {
-            sidebar.classList.remove('open');
-        });
-    }
-
     // Time & Date Display
     const dateEl = document.getElementById('global-datetime');
     function updateTime() {
+        if (!dateEl) return;
         const now = new Date();
         const options = { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
         dateEl.textContent = now.toLocaleDateString('en-US', options);
     }
-    setInterval(updateTime, 60000);
-    updateTime();
+    if (dateEl) {
+        setInterval(updateTime, 60000);
+        updateTime();
+    }
 
-    // Init modules if any global setup needed
+    // Init modules
     setTimeout(() => {
         if (window.refreshDashboard) window.refreshDashboard();
     }, 100);
@@ -82,5 +102,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Format Currency Utility
 window.formatCurrency = (num) => {
-    return '₹' + parseFloat(num).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    return '₹' + parseFloat(num || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 };

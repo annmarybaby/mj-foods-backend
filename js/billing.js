@@ -168,9 +168,9 @@ window.showShopSelectionModal = async function() {
 };
 
 window.renderRouteLists = function(shops) {
-    const chipHtml = (n) => `<div class="route-chip" onclick="window.confirmInitialShop('${n.replace(/'/g,"\\'")}')" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); padding:16px; border-radius:15px; cursor:pointer; font-weight:600; display:flex; justify-content:space-between; align-items:center; color:#f1f5f9;"><span>${n}</span><i data-lucide="chevron-right" style="width:14px; opacity:0.3;"></i></div>`;
-    document.getElementById('route-airport-list').innerHTML = (shops.airport || []).map(chipHtml).join('') || 'None.';
-    document.getElementById('route-town-list').innerHTML = (shops.town || []).map(chipHtml).join('') || 'None.';
+    const chipHtml = (n) => `<button class="route-chip" onclick="window.confirmInitialShop('${n.replace(/'/g,"\\'")}')" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); padding:16px; border-radius:15px; cursor:pointer; font-weight:600; text-align:left; color:#f1f5f9; transition:all 0.2s; display:flex; justify-content:space-between; align-items:center; width:100%;"><span>${n}</span><i data-lucide="chevron-right" style="width:14px; opacity:0.3;"></i></button>`;
+    document.getElementById('route-airport-list').innerHTML = (shops.airport || []).map(chipHtml).join('') || '<div style="color:#64748b;font-style:italic;">None</div>';
+    document.getElementById('route-town-list').innerHTML = (shops.town || []).map(chipHtml).join('') || '<div style="color:#64748b;font-style:italic;">None</div>';
     if (window.lucide) window.lucide.createIcons();
 };
 
@@ -289,7 +289,7 @@ window.shareViaEmail = () => {
 };
 
 window.sharePDF = async () => {
-    const shop = document.getElementById('shop-name')?.value || 'Walk-in';
+    const shop = document.getElementById('shop-name')?.value || 'Customer';
     const grandTotal = document.getElementById('grand-total')?.textContent;
     if (currentItems.length === 0) return;
     
@@ -305,33 +305,24 @@ window.sharePDF = async () => {
     const receiptDiv = document.getElementById('print-receipt');
     receiptDiv.innerHTML = receiptHTML(shop, grandTotal, itemsHtml);
     
-    // Ensure styles are applied before capture
     const opt = { 
-        margin: [0.5, 0.5], 
-        filename: `Invoice_${shop.replace(/[^a-z0-9]/gi, '_')}.pdf`, 
-        image: { type:'jpeg', quality:1 }, 
-        html2canvas: { scale: 3, useCORS: true, logging: false, letterRendering: true, windowWidth: 800 }, 
-        jsPDF: { unit:'in', format:'a4', orientation:'portrait' } 
+        margin: [0, 0], 
+        filename: `Invoice_${shop.replace(/ /g,'_')}.pdf`, 
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
 
     try {
-        // Use a slight delay to ensure browser paiting
-        await new Promise(r => setTimeout(r, 100));
-        const pdfBlob = await html2pdf().set(opt).from(receiptDiv).output('blob');
-        const file = new File([pdfBlob], opt.filename, { type: 'application/pdf' });
-        
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-                title: 'MJ Foods Invoice',
-                text: `Invoice for ${shop}`,
-                files: [file]
-            });
-        } else {
-            html2pdf().set(opt).from(receiptDiv).save();
-            alert("Direct sharing not supported. Downloaded instead!");
-        }
-    } catch (e) { console.error("PDF Generate Error", e); }
-    document.getElementById('share-menu').style.display = 'none';
+        // Use html2pdf worker for better stability
+        await html2pdf().set(opt).from(receiptDiv).save();
+        alert("✅ PDF Generated & Saved!");
+    } catch (e) { 
+        console.error("PDF Generate Error", e); 
+        alert("⚠️ PDF formation failed. Try Browser Print instead.");
+    }
+    const sm = document.getElementById('share-menu');
+    if (sm) sm.style.display = 'none';
 };
 
 function receiptHTML(shop, grandTotal, itemsHtml) {

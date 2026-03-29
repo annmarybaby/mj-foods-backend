@@ -35,7 +35,36 @@ app.get('/api/sales', async (req, res) => {
 });
 
 app.post('/api/sales', async (req, res) => {
-    // ... same ...
+    const { timestamp, shop, items, total, status } = req.body;
+    try {
+        const [result] = await pool.query(
+            'INSERT INTO sales (timestamp, shop, items, total, status) VALUES (?, ?, ?, ?, ?)',
+            [timestamp, shop, JSON.stringify(items), total, status || 'Pending']
+        );
+        res.json({ id: result.insertId });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/expenses', async (req, res) => {
+    const { timestamp, category, amt, note } = req.body;
+    try {
+        const [result] = await pool.query(
+            'INSERT INTO expenses (timestamp, category, amt, note) VALUES (?, ?, ?, ?)',
+            [timestamp, category, amt, note]
+        );
+        res.json({ id: result.insertId });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/employees', async (req, res) => {
+    const { name, role, salary_type, base_salary } = req.body;
+    try {
+        const [result] = await pool.query(
+            'INSERT INTO employees (name, role, salary_type, base_salary) VALUES (?, ?, ?, ?)',
+            [name, role, salary_type, base_salary]
+        );
+        res.json({ id: result.insertId });
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.put('/api/sales/:id', async (req, res) => {
