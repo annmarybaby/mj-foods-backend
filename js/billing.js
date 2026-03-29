@@ -55,12 +55,17 @@ async function getShops() {
 
 // ── initBilling ─────────────────────────────────────────────────────────────
 async function initBilling() {
-    const shops = await getShops();
+    // Show pos grid immediately
     const posGridHtml = menu.map((item, i) => `
         <button class="pos-item-btn" onclick="window.quickAddItem(${i})">
             <span class="item-name">${item.n}</span>
             <span class="item-price">${window.formatCurrency(item.p)}</span>
         </button>`).join('');
+
+    // Async shop load
+    getShops().then(shops => {
+        window.renderRouteLists(shops);
+    }).catch(() => {});
 
     const savedShop = localStorage.getItem('mj_billing_draft_shop') || '';
 

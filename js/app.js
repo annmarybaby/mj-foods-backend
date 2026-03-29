@@ -8,8 +8,8 @@ window.initMobileNavigation = function() {
             e.stopPropagation();
             const isOpen = sidebar.classList.toggle('open');
             if (overlay) {
-                if (isOpen) overlay.classList.add('active');
-                else overlay.classList.remove('active');
+                if (isOpen) overlay.style.display = 'block';
+                else overlay.style.display = 'none';
             }
         };
     }
@@ -17,7 +17,7 @@ window.initMobileNavigation = function() {
     if (overlay) {
         overlay.onclick = () => {
             sidebar.classList.remove('open');
-            overlay.classList.remove('active');
+            overlay.style.display = 'none';
         };
     }
 
@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const sidebarEl = document.querySelector('.sidebar');
             const overlayEl = document.getElementById('sidebar-overlay');
             if (sidebarEl) sidebarEl.classList.remove('open');
-            if (overlayEl) overlayEl.classList.remove('active');
+            if (overlayEl) overlayEl.style.display = 'none';
 
             // Update Header Title
             if (viewTitle) viewTitle.textContent = item.querySelector('.text').textContent;
