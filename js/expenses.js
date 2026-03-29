@@ -513,9 +513,12 @@ window.clearAllExpenses = () => {
 };
 
 async function renderExpenses() {
-    const exps = await window.DB.getExpenses();
+    let exps = await window.DB.getExpenses();
     const body = document.getElementById('expense-body');
     if (!body) return;
+
+    // Safety: ensure it is an array
+    if (!Array.isArray(exps)) exps = [];
 
     if (exps.length === 0) {
         body.innerHTML = '<tr><td colspan="4" style="padding:40px;text-align:center;color:#475569;font-style:italic;">No records.</td></tr>';

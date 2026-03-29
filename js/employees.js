@@ -156,7 +156,10 @@ window.renderEmployees = async function() {
     
     if (!directoryList || !attendanceList) return;
 
-    if (emps.length === 0) {
+    // Safety: ensure emps is an array
+    const employeeList = Array.isArray(emps) ? emps : [];
+
+    if (employeeList.length === 0) {
         directoryList.innerHTML = `<div style="padding:40px;text-align:center;color:#64748b;font-style:italic;">No records found. Start by adding an employee.</div>`;
         attendanceList.innerHTML = `<div style="padding:40px;text-align:center;color:#64748b;font-style:italic;">No employees to log.</div>`;
         if (summaryMini) summaryMini.innerHTML = '';

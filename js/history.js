@@ -4,12 +4,16 @@ window.initHistory = async function() {
     if (!historyView) return;
     
     // FETCH FROM MYSQL
-    const sales = await window.DB.getSales();
+    let sales = await window.DB.getSales();
+    if (!Array.isArray(sales)) sales = [];
 
     // Shallow copy and reverse to show newest first
     const sortedSales = [...sales].reverse();
 
-    const historyHtml = sortedSales.map(s => `
+    const historyHtml = sortedSales.map(s => {
+        // Ensure items is an array for internal map
+        if (!Array.isArray(s.items)) s.items = [];
+        return `
         <div style="background: rgba(255,255,255,0.03); padding: 15px 20px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border-color);">
             <div class="flex-between">
                 <div>
@@ -57,8 +61,8 @@ window.initHistory = async function() {
                 </div>
             </details>
             ` : ''}
-        </div>
-    `).join('') || '<div class="empty-state">No sales history available.</div>';
+        `;
+    }).join('') || '<div class="empty-state">No sales history available.</div>';
 
     historyView.innerHTML = `
         <div class="card" style="height: calc(100vh - 120px); border-top: 4px solid var(--accent-blue);">
