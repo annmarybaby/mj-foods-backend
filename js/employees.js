@@ -166,28 +166,31 @@ window.renderEmployees = async function() {
         return;
     }
 
-    // ── Render Directory Section ──
-    directoryList.innerHTML = emps.map(emp => {
-        const photoHtml = emp.id_photo 
-            ? `<img src="${emp.id_photo}" onclick="window.showPhotoDetails('${emp.id_photo}', '${emp.name}')" style="width:50px; height:50px; border-radius:10px; object-fit:cover; border: 2px solid rgba(255,255,255,0.1); cursor:pointer;">`
-            : `<div style="width:50px; height:50px; border-radius:10px; background:rgba(59,130,246,0.1); display:flex; align-items:center; justify-content:center; color:#3b82f6; font-weight:bold; border: 2px dashed rgba(59,130,246,0.2);">${emp.name[0]}</div>`;
-
-        return `
-        <div style="background:rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding:16px; border-radius:14px; display:flex; gap:15px; align-items:center;">
-            ${photoHtml}
-            <div style="flex:1;">
-                <div style="font-weight:700;color:#f1f5f9;font-size:1.05rem;">${emp.name}</div>
-                <div style="font-size:0.75rem;color:#64748b;margin-top:2px;">${emp.role || 'Staff Member'} • <span style="color:#10b981; font-weight:600;">₹${emp.daily_wage}/day</span></div>
+    function cardHtml(emp) {
+        return `<div class="card employee-card" style="border-left: 4px solid #3b82f6; border-radius: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:15px;">
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <div class="avatar" style="width:45px; height:45px; border-radius:12px; background:rgba(59,130,246,0.1); display:flex; align-items:center; justify-content:center; color:#3b82f6; font-weight:700;">${emp.name.charAt(0)}</div>
+                    <div>
+                        <h3 style="margin:0; font-size:1.1rem; color:#fff;">${emp.name}</h3>
+                        <span style="font-size:0.75rem; color:#64748b; font-weight:600; text-transform:uppercase;">${emp.role || 'Staff'}</span>
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:1rem; font-weight:800; color:#10b981;">₹${parseFloat(emp.daily_wage || 0).toLocaleString('en-IN')}</div>
+                    <div style="font-size:0.7rem; color:#64748b;">Daily Wage</div>
+                </div>
             </div>
-            <div style="display:flex; gap:8px;">
-                <button onclick="window.removeEmployee('${emp.id}')"
-                    title="Delete Employee"
-                    style="background:rgba(239,68,68,0.08);color:#f87171;border:1px solid rgba(239,68,68,0.2);border-radius:10px;width:38px; height:38px; display:flex; align-items:center; justify-content:center; cursor:pointer;">
-                    <i data-lucide="trash-2" style="width:18px;"></i>
-                </button>
+            <div style="margin-top:20px; padding-top:15px; border-top:1px solid rgba(255,255,255,0.05); display:flex; gap:10px;">
+                <button class="btn btn-secondary btn-sm" onclick="window.viewAttendance('${emp.id}')" style="flex:1; padding:8px; border-radius:8px; border:none; background:rgba(255,255,255,0.05); color:#fff; cursor:pointer;"><i data-lucide="calendar" style="width:14px;"></i> Attend</button>
+                <button class="btn btn-secondary btn-sm" onclick="window.viewPayments('${emp.id}')" style="flex:1; padding:8px; border-radius:8px; border:none; background:rgba(255,255,255,0.05); color:#fff; cursor:pointer;"><i data-lucide="wallet" style="width:14px;"></i> Pay</button>
+                <button class="btn btn-icon btn-sm" onclick="window.removeEmployee('${emp.id}')" style="padding:8px; border-radius:8px; border:none; background:rgba(239,68,68,0.1); color:#ef4444; cursor:pointer;"><i data-lucide="trash-2" style="width:14px;"></i></button>
             </div>
         </div>`;
-    }).join('');
+    }
+
+    // ── Render Directory Section ──
+    directoryList.innerHTML = emps.map(emp => cardHtml(emp)).join('');
 
     // Attendance Simple List
     attendanceList.innerHTML = emps.map(emp => `

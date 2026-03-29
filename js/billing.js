@@ -71,9 +71,9 @@ async function initBilling() {
 
     document.getElementById('view-billing').innerHTML = `
         <!-- SELECTION MODAL -->
-        <div id="shop-init-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(15px);">
-            <div style="background:#1a2540; border:1px solid rgba(255,255,255,0.1); border-radius:30px; width:95%; max-width:850px; max-height:85vh; overflow:hidden; display:flex; flex-direction:column;">
-                <div style="padding:30px; border-bottom:1.5px solid rgba(255,255,255,0.06);">
+        <div id="shop-init-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:2000;align-items:flex-start;justify-content:center;padding:50px 20px;backdrop-filter:blur(20px);">
+            <div class="card" style="width:100%;max-width:850px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;border:1px solid rgba(255,255,255,0.1);box-shadow:0 30px 80px rgba(0,0,0,0.8);background:#0f172a; border-radius:30px;">
+                <div style="padding:40px; border-bottom:1.5px solid rgba(255,255,255,0.06);">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                         <h2 style="margin:0; font-size:1.8rem; color:#fff; display:flex; align-items:center; gap:12px;"><i data-lucide="map-pin" style="color:#3b82f6;"></i> Select Billing Destination</h2>
                     </div>
@@ -95,13 +95,13 @@ async function initBilling() {
         </div>
 
         <!-- MAIN VIEW -->
-        <div id="billing-container-inner" style="opacity:${savedShop ? 1 : 0.05}; pointer-events:${savedShop ? 'all' : 'none'}; transition:all 0.4s ease;">
-            <div class="card mb-4" style="padding:15px 22px; border-top: 4px solid #3b82f6; border-radius:18px; display:flex; justify-content:space-between; align-items:center;">
+        <div id="billing-container-inner" style="transition:all 0.4s ease;">
+            <div class="card mb-4" style="padding:15px 22px; border-top: 4px solid #3b82f6; border-radius:18px; display:flex; justify-content:space-between; align-items:center; background: rgba(59, 130, 246, 0.05);">
                 <div style="display:flex;align-items:center;gap:12px;">
                     <div style="background:rgba(59,130,246,0.1); padding:8px; border-radius:10px;"><i data-lucide="receipt" style="color:#3b82f6; width:20px;"></i></div>
                     <div>
                         <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:800; letter-spacing:1px;">Generating Bill For</div>
-                        <h3 id="display-shop-name" style="margin:0; font-size:1.2rem; color:#f1f5f9;">${savedShop || 'None'}</h3>
+                        <h3 id="display-shop-name" style="margin:0; font-size:1.2rem; color:#f1f5f9; text-shadow: 0 0 10px rgba(59,130,246,0.3);">${savedShop || 'No Shop Selected'}</h3>
                     </div>
                 </div>
                 <div style="display:flex; gap:10px;">
