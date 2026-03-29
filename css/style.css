@@ -143,6 +143,20 @@ h2 { font-size: 1.5rem; letter-spacing: -0.5px; color: var(--text-primary); marg
     height: 100vh;
     overflow-y: auto;
     position: relative;
+    margin-left: 260px; /* Offset for sidebar */
+    transition: margin 0.3s ease;
+}
+
+@media (max-width: 1024px) {
+    .main-content {
+        margin-left: 60px; /* Offset for collapsed sidebar */
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0; /* Full width for mobile */
+    }
 }
 
 .topbar {
@@ -339,7 +353,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 }
 
 @media (max-width: 1024px) {
-    .app-container { grid-template-columns: 80px 1fr; }
+    .sidebar { width: 80px; }
     .sidebar .brand h1, .sidebar .nav-item .text, .sidebar .user-info { display: none; }
     .sidebar .brand { padding: 0 0 32px 0; justify-content: center; }
     .sidebar .nav-item { padding: 14px; justify-content: center; }
