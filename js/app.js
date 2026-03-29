@@ -39,6 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.initLedger();
             } else if (targetId === 'view-employees' && window.initEmployees) {
                 window.initEmployees();
+            } else if (targetId === 'view-billing' && window.initBilling) {
+                window.initBilling();
             } else if (targetId === 'view-database' && window.initDatabase) {
                 window.initDatabase();
             }
