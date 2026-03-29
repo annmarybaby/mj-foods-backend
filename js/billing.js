@@ -1,73 +1,33 @@
-// ═══════════════════════════════════════════════════════════════════
-//  BILLING MODULE  — with Airport / Town shop categories
-// ═══════════════════════════════════════════════════════════════════
-
 const menu = [
-    { n: "Carrot cake piece", p: 10 }, { n: "Parippuvada", p: 7 }, { n: "Uzhunnuvada", p: 9 },
-    { n: "Bonda", p: 7 }, { n: "Sabolavada", p: 7 }, { n: "Sugiyan", p: 9 },
-    { n: "Ella Ada", p: 10 }, { n: "Chi. Burger", p: 35 }, { n: "Veg. Burger", p: 28 },
-    { n: "Chi. Sandwich", p: 28 }, { n: "Veg. Sandwich", p: 20 }, { n: "Unnakai", p: 14 },
-    { n: "Erachi Pathiri", p: 15 }, { n: "Malabar Roll", p: 20 }, { n: "Egg Puffs", p: 15 },
-    { n: "Veg. Puffs", p: 11 }, { n: "Chicken Puffs", p: 18 }, { n: "Banana Puffs", p: 14 },
-    { n: "Chi. Cutlet", p: 15 }, { n: "Veg. Cutlet", p: 12 }, { n: "Chi. Roll", p: 16 },
-    { n: "Veg. Roll", p: 12 }, { n: "Thalassery Roll", p: 16 }, { n: "Chicken Samosa", p: 10 },
-    { n: "Elanchi", p: 13 }, { n: "Kaipola (8 piece)", p: 180 }, { n: "Chatti Pathiri (8 piece)", p: 200 },
-    { n: "Bun Maska", p: 20 }
-];
-menu.sort((a, b) => a.n.localeCompare(b.n));
-
-const DEFAULT_AIRPORT_SHOPS = [
-    'Domestic', 'International', '0484', 'Gallery',
-    'Cargo', 'Casino', 'Saravanabhavan', 'Achayi', 'Cafe 24'
+    { n: 'Banana Puffs', p: 14.00, c: 'Bakery' },
+    { n: 'Bonda', p: 7.00, c: 'Bakery' },
+    { n: 'Bun Maska', p: 20.00, c: 'Bakery' },
+    { n: 'Carrot cake piece', p: 10.00, c: 'Bakery' },
+    { n: 'Chatti Pathiri (8 piece)', p: 200.00, c: 'Main Order' },
+    { n: 'Chi. Burger', p: 35.00, c: 'Bakery' },
+    { n: 'Chi. Cutlet', p: 15.00, c: 'Bakery' },
+    { n: 'Chicken puff', p: 18.00, c: 'Bakery' },
+    { n: 'Egg puff', p: 15.00, c: 'Bakery' },
+    { n: 'Parippu vada', p: 7.00, c: 'Bakery' },
+    { n: 'Samosa', p: 10.00, c: 'Bakery' },
+    { n: 'Uzhunnu vada', p: 10.00, c: 'Bakery' },
+    { n: 'Vada piece', p: 10.00, c: 'Bakery' }
 ];
 
-let currentItems = JSON.parse(localStorage.getItem('mj_billing_draft_items') || '[]');
+const DEFAULT_AIRPORT_SHOPS = ['Airways 1', 'Coffee Day Airport', 'Domestic Terminal A', 'International Gate 4'];
 
-function saveBillingDraft() {
-    localStorage.setItem('mj_billing_draft_items', JSON.stringify(currentItems));
-    const shopInput = document.getElementById('shop-name');
-    if (shopInput) localStorage.setItem('mj_billing_draft_shop', shopInput.value);
-}
-
-function clearBillingDraft(skipModal = false) {
-    currentItems = [];
-    localStorage.removeItem('mj_billing_draft_items');
-    localStorage.removeItem('mj_billing_draft_shop');
-    const shopInput = document.getElementById('shop-name');
-    if (shopInput) shopInput.value = '';
-    const displayShop = document.getElementById('display-shop-name');
-    if (displayShop) displayShop.textContent = 'None';
-    
-    // Dim the UI until new shop is picked
-    const inner = document.getElementById('billing-container-inner');
-    if (inner) {
-        inner.style.opacity = '0.05';
-        inner.style.pointerEvents = 'none';
-    }
-    
-    renderBillingTable();
-    if (!skipModal) window.showShopSelectionModal();
-}
-
-async function getShops() {
-    return await window.DB.getShops();
-}
+let currentItems = [];
 
 // ── initBilling ─────────────────────────────────────────────────────────────
 async function initBilling() {
-    // Show pos grid immediately
-    const posGridHtml = menu.map((item, i) => `
-        <button class="pos-item-btn" onclick="window.quickAddItem(${i})">
-            <span class="item-name">${item.n}</span>
-            <span class="item-price">${window.formatCurrency(item.p)}</span>
-        </button>`).join('');
-
-    // Async shop load
-    getShops().then(shops => {
-        window.renderRouteLists(shops);
-    }).catch(() => {});
-
     const savedShop = localStorage.getItem('mj_billing_draft_shop') || '';
+    
+    // POS Menu Grid Builder
+    const posGridHtml = menu.map((item, i) => `
+        <button class="pos-item-btn" onclick="window.quickAddItem(${i})" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:18px; border-radius:18px; text-align:center; transition:all 0.2s; cursor:pointer;">
+            <div style="font-weight:700; color:#fff; margin-bottom:8px; font-size:1rem;">${item.n}</div>
+            <div style="font-size:0.8rem; background:rgba(16,185,129,0.1); color:#10b981; display:inline-block; padding:3px 10px; border-radius:10px; font-weight:800;">₹${item.p.toFixed(2)}</div>
+        </button>`).join('');
 
     document.getElementById('view-billing').innerHTML = `
         <!-- SELECTION MODAL -->
@@ -88,7 +48,7 @@ async function initBilling() {
                 </div>
                 <div style="padding:22px 30px; background:rgba(0,0,0,0.2); border-top:1px solid rgba(255,255,255,0.06); display:grid; grid-template-columns: 1.5fr 1fr 0.5fr; gap:15px;">
                     <input id="route-new-shop" placeholder="Shop Name..." style="padding:14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:white;">
-                    <input id="route-new-phone" type="tel" placeholder="Phone (e.g. 919876543210)" style="padding:14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:white;">
+                    <input id="route-new-phone" type="tel" placeholder="Phone..." style="padding:14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:white;">
                     <button onclick="window.confirmRouteManual()" style="background:#3b82f6; color:white; border:none; border-radius:12px; padding:0 20px; font-weight:700; cursor:pointer;">Select</button>
                 </div>
             </div>
@@ -110,56 +70,60 @@ async function initBilling() {
                 </div>
             </div>
 
-            <div class="billing-main-grid">
-                <div class="card" style="padding:22px; border-radius:24px;">
-                    <input type="text" id="menu-search" oninput="window.filterMenu(this.value)" placeholder="🔍 Search menu catalogue..." style="width:100%;padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.2);color:white;margin-bottom:20px;">
-                    <div class="pos-grid" id="pos-grid-container">${posGridHtml}</div>
-                </div>
-                <div class="card" style="border-top:4px solid var(--accent-blue);padding:0; border-radius:24px; overflow:hidden;">
-                    <div style="padding:22px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
-                        <h3 style="margin:0; font-size:1.1rem; font-weight:900;">Invoice Items</h3>
-                        <div id="item-count-badge" style="background:#3b82f6; color:white; padding:4px 10px; border-radius:15px; font-size:0.7rem; font-weight:800;">${currentItems.length} items</div>
+            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:25px; min-height:0;" class="pos-main-grid">
+                <!-- CATALOG -->
+                <div class="card" style="display:flex; flex-direction:column; padding:24px; border-radius:24px;">
+                    <div style="position:relative; margin-bottom:20px;">
+                         <i data-lucide="search" style="position:absolute; left:16px; top:50%; transform:translateY(-50%); width:18px; color:#64748b;"></i>
+                         <input type="text" id="pos-search" oninput="window.filterPOS(this.value)" placeholder="Search menu catalogue..." style="width:100%; padding:14px; border-radius:15px; border:1px solid rgba(255,255,255,0.08); background:rgba(0,0,0,0.2); color:white; font-size:1rem; padding-left:48px; outline:none;">
                     </div>
-                    <div id="bill-body-scroller" style="max-height:450px; overflow-y:auto;"><table style="width:100%;"><tbody id="bill-body"></tbody></table></div>
-                    <div style="padding:22px;background:rgba(0,0,0,0.2); border-top:1px solid var(--border-color);">
-                        <div class="flex-between mb-4">
-                            <span style="color:#64748b; font-size:0.85rem; font-weight:800; text-transform:uppercase;">Grand Total</span>
-                            <h2 style="margin:0; font-size:2.4rem; color:#10b981; font-weight:900;" id="grand-total">₹0.00</h2>
+                    <div id="pos-items-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:15px; overflow-y:auto; padding:5px;">
+                        ${posGridHtml}
+                    </div>
+                </div>
+
+                <!-- CART -->
+                <div class="card" style="display:flex; flex-direction:column; padding:0; border-radius:24px; overflow:hidden; border-top: 4px solid #10b981;">
+                    <div style="padding:22px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
+                        <h3 style="margin:0; font-size:1.1rem; font-weight:800;">Invoice Items</h3>
+                        <span id="item-count-badge" class="badge" style="background:#3b82f6;">0 items</span>
+                    </div>
+                    
+                    <div id="current-invoice-list" style="flex:1; overflow-y:auto; padding:20px;">
+                        <div style="text-align:center; padding:40px; color:#64748b; font-style:italic;">No items added yet.</div>
+                    </div>
+
+                    <div style="padding:24px; background:rgba(0,0,0,0.2); border-top:1px solid rgba(255,255,255,0.06);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+                            <span style="color:#64748b; font-weight:800; text-transform:uppercase; font-size:0.75rem;">Grand Total</span>
+                            <span id="grand-total" style="font-size:2rem; font-weight:900; color:#10b981; letter-spacing:-1px;">₹0.00</span>
                         </div>
+
+                        <button class="btn btn-primary" onclick="window.saveBill()" style="width:100%; height:55px; font-weight:900; font-size:1.15rem; margin-bottom:12px; border-radius:16px; box-shadow:0 10px 30px rgba(59,130,246,0.2);">GENERATE & PRINT</button>
                         
-                        <div style="display:flex; flex-direction:column; gap:12px;">
-                            <button class="btn btn-warning" style="height:65px; width:100%; font-weight:900; font-size:1.25rem; border-radius:16px;" onclick="window.saveBill('Pending')">GENERATE & PRINT</button>
-                            
-                            <div style="position:relative; display:flex; gap:10px;">
-                                <button onclick="window.prepareAndPrint()" class="btn btn-secondary" style="flex:1; height:48px; border-radius:12px; font-weight:700;"><i data-lucide="printer" style="width:16px;"></i></button>
-                                <div style="position:relative; flex:2;">
-                                    <button id="share-dropdown-btn" onclick="window.toggleShareMenu(event)" class="btn btn-primary" style="width:100%; height:48px; border-radius:12px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:8px;">
-                                        <i data-lucide="share-2" style="width:18px;"></i> Share
-                                    </button>
-                                    <div id="share-menu" style="display:none; position:absolute; bottom:60px; right:0; width:220px; background:#1a2540; border:1px solid rgba(255,255,255,0.1); border-radius:16px; z-index:100; box-shadow:0 10px 40px rgba(0,0,0,0.6); overflow:hidden;">
-                                        <div onclick="window.shareWhatsAppWeb()" style="padding:15px; cursor:pointer; font-size:0.85rem; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; align-items:center; gap:10px; background:rgba(37,211,102,0.08);">
-                                            <i data-lucide="phone" style="width:16px; color:#25D366;"></i> <strong>WhatsApp Web</strong> (Direct)
-                                        </div>
-                                        <div onclick="window.sharePDF()" style="padding:15px; cursor:pointer; font-size:0.85rem; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; align-items:center; gap:10px;">
-                                            <i data-lucide="share" style="width:16px; color:#3b82f6;"></i> Native Device Share
-                                        </div>
-                                        <div onclick="window.sendWhatsApp('text')" style="padding:15px; cursor:pointer; font-size:0.85rem; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; align-items:center; gap:10px;">
-                                            <i data-lucide="message-circle" style="width:16px; color:#25D366;"></i> Send Quick Text
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                            <button class="btn btn-secondary" style="height:48px; border-radius:12px; border-color:rgba(255,255,255,0.1);" onclick="window.window.print()"><i data-lucide="printer"></i></button>
+                            <button class="btn btn-secondary" style="height:48px; border-radius:12px; border-color:rgba(59,130,246,0.2); color:#3b82f6;" onclick="window.sharePDF()"><i data-lucide="share-2"></i> Share</button>
                         </div>
                     </div>
                 </div>
             </div>
-            <input type="hidden" id="shop-name" value="${savedShop}">
-            <input type="hidden" id="shop-phone" value="${localStorage.getItem('mj_billing_draft_phone') || ''}">
         </div>
+
+        <!-- Hidden Receipt Buffer (Off-screen) -->
+        <div id="print-receipt" style="position:fixed; left:-5000px; padding:40px; background:white; color:black; font-family:sans-serif; width:800px;"></div>
+        
+        <input type="hidden" id="shop-name" value="${savedShop}">
     `;
 
     renderBillingTable();
     if (!savedShop) window.showShopSelectionModal();
+    
+    // Background shop load
+    getShops().then(shops => {
+        window.renderRouteLists(shops);
+    });
+
     if (window.lucide) window.lucide.createIcons();
 }
 
@@ -168,13 +132,8 @@ window.showShopSelectionModal = async function() {
     const modal = document.getElementById('shop-init-modal');
     if (!modal) return;
     
-    // Add HARDCODED FALLBACKS for reliability
-    if (!shops.airport || shops.airport.length === 0) {
-        shops.airport = DEFAULT_AIRPORT_SHOPS;
-    }
-    if (!shops.town || shops.town.length === 0) {
-        shops.town = ['Regular Town', 'Downtown Outlet', 'Bakery Main'];
-    }
+    if (!shops.airport || shops.airport.length === 0) shops.airport = DEFAULT_AIRPORT_SHOPS;
+    if (!shops.town || shops.town.length === 0) shops.town = ['Regular Town', 'Downtown Outlet'];
 
     modal.style.display = 'flex';
     const search = document.getElementById('route-shop-search');
@@ -184,9 +143,29 @@ window.showShopSelectionModal = async function() {
 
 window.renderRouteLists = function(shops) {
     const chipHtml = (n) => `<button class="route-chip" onclick="window.confirmInitialShop('${n.replace(/'/g,"\\'")}')" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); padding:16px; border-radius:15px; cursor:pointer; font-weight:600; text-align:left; color:#f1f5f9; transition:all 0.2s; display:flex; justify-content:space-between; align-items:center; width:100%;"><span>${n}</span><i data-lucide="chevron-right" style="width:14px; opacity:0.3;"></i></button>`;
-    document.getElementById('route-airport-list').innerHTML = (shops.airport || []).map(chipHtml).join('') || '<div style="color:#64748b;font-style:italic;">None</div>';
-    document.getElementById('route-town-list').innerHTML = (shops.town || []).map(chipHtml).join('') || '<div style="color:#64748b;font-style:italic;">None</div>';
+    const r1 = document.getElementById('route-airport-list');
+    const r2 = document.getElementById('route-town-list');
+    if (r1) r1.innerHTML = (shops.airport || []).map(chipHtml).join('') || '<div style="color:#64748b;">None</div>';
+    if (r2) r2.innerHTML = (shops.town || []).map(chipHtml).join('') || '<div style="color:#64748b;">None</div>';
     if (window.lucide) window.lucide.createIcons();
+};
+
+window.confirmInitialShop = function(name) {
+    localStorage.setItem('mj_billing_draft_shop', name);
+    const input = document.getElementById('shop-name');
+    const display = document.getElementById('display-shop-name');
+    if (input) input.value = name;
+    if (display) display.textContent = name;
+    document.getElementById('shop-init-modal').style.display = 'none';
+};
+
+window.confirmRouteManual = function() {
+    const name = document.getElementById('route-new-shop').value;
+    const phone = document.getElementById('route-new-phone').value;
+    if (!name) return alert("Please enter shop name");
+    localStorage.setItem('mj_billing_draft_shop', name);
+    localStorage.setItem('mj_billing_draft_phone', phone);
+    window.confirmInitialShop(name);
 };
 
 window.filterRouteShops = function(q) {
@@ -196,223 +175,171 @@ window.filterRouteShops = function(q) {
     });
 };
 
-window.confirmInitialShop = function(name, phone = '') {
-    const input = document.getElementById('shop-name');
-    const phoneInput = document.getElementById('shop-phone');
-    const inner = document.getElementById('billing-container-inner');
-    const display = document.getElementById('display-shop-name');
-    if (input) input.value = name;
-    if (phoneInput) phoneInput.value = phone;
-    if (display) display.textContent = name;
-    if (inner) { inner.style.opacity = '1'; inner.style.pointerEvents = 'all'; }
-    document.getElementById('shop-init-modal').style.display = 'none';
-    localStorage.setItem('mj_billing_draft_shop', name);
-    localStorage.setItem('mj_billing_draft_phone', phone);
+window.filterPOS = function(q) {
+    q = q.toLowerCase();
+    document.querySelectorAll('.pos-item-btn').forEach(btn => {
+        const name = btn.querySelector('div').innerText.toLowerCase();
+        btn.style.display = name.includes(q) ? 'block' : 'none';
+    });
 };
 
-window.confirmRouteManual = function() {
-    const name = (document.getElementById('route-new-shop')?.value || '').trim();
-    const phone = (document.getElementById('route-new-phone')?.value || '').trim();
-    if (name) window.confirmInitialShop(name, phone);
-};
-
-// ── Core Functionality ───────────────────────────────────────────────────────
 window.quickAddItem = (idx) => {
     const item = menu[idx];
     const existing = currentItems.find(i => i.name === item.n);
-    if (existing) { existing.qty++; existing.total = existing.qty * existing.price; }
-    else currentItems.push({ name: item.n, qty: 1, price: item.p, total: item.p });
-    saveBillingDraft();
+    if (existing) {
+        existing.qty++;
+        existing.total = existing.qty * existing.price;
+    } else {
+        currentItems.push({ name: item.n, price: item.p, qty: 1, total: item.p });
+    }
     renderBillingTable();
 };
 
 function renderBillingTable() {
-    const body = document.getElementById('bill-body');
-    if (!body) return;
-    let grandTotal = 0;
-    
-    // Update badge count
+    const list = document.getElementById('current-invoice-list');
+    const totalEl = document.getElementById('grand-total');
     const badge = document.getElementById('item-count-badge');
-    if (badge) badge.textContent = `${currentItems.length} items`;
-    
+    if (!list) return;
+
     if (currentItems.length === 0) {
-        body.innerHTML = '<tr><td style="padding:60px 20px; text-align:center; color:#64748b; font-style:italic;">No items in invoice.</td></tr>';
-        document.getElementById('grand-total').textContent = '₹0.00'; return;
+        list.innerHTML = '<div style="text-align:center; padding:40px; color:#64748b; font-style:italic;">No items added yet.</div>';
+        totalEl.textContent = '₹0.00';
+        badge.textContent = '0 items';
+        return;
     }
-    body.innerHTML = currentItems.map((item, index) => {
+
+    let grandTotal = 0;
+    list.innerHTML = currentItems.map((item, idx) => {
         grandTotal += item.total;
-        return `<tr style="border-bottom: 1.5px solid rgba(255,255,255,0.03);"><td style="padding:18px 22px;"><div style="display:flex; justify-content:space-between; margin-bottom:8px;"><strong style="font-size:1.1rem; color:#fff;">${item.name}</strong><span style="font-weight:900; color:#fff;">${window.formatCurrency(item.total)}</span></div><div style="display:flex; align-items:center; gap:12px;"><span style="font-size:0.75rem; color:#64748b;">${window.formatCurrency(item.price)} each</span><div style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.05); border-radius:10px; padding:4px 10px;"><button onclick="window.updateItemQty(${index},-1)" style="background:none; border:none; color:#3b82f6; cursor:pointer; font-weight:900; font-size:1.2rem;">-</button><span style="font-size:0.9rem; min-width:20px; text-align:center; font-weight:900;">${item.qty}</span><button onclick="window.updateItemQty(${index},1)" style="background:none; border:none; color:#3b82f6; cursor:pointer; font-weight:900; font-size:1.2rem;">+</button></div></div></td></tr>`;
+        return `
+            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); padding:15px; border-radius:15px; margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:10px;">
+                    <div style="font-weight:700; color:#fff; font-size:1rem;">${item.name}</div>
+                    <div style="font-weight:800; color:#10b981;">₹${item.total.toFixed(2)}</div>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-size:0.75rem; color:#64748b;">₹${item.price.toFixed(2)} each</div>
+                    <div style="display:flex; align-items:center; gap:12px; background:rgba(0,0,0,0.2); padding:5px 12px; border-radius:10px;">
+                        <button onclick="updateQty(${idx}, -1)" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer; width:20px;">-</button>
+                        <span style="font-size:0.9rem; font-weight:800; color:#3b82f6; min-width:20px; text-align:center;">${item.qty}</span>
+                        <button onclick="updateQty(${idx}, 1)" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer; width:20px;">+</button>
+                    </div>
+                </div>
+            </div>`;
     }).join('');
-    document.getElementById('grand-total').textContent = window.formatCurrency(grandTotal);
+
+    totalEl.textContent = window.formatCurrency(grandTotal);
+    badge.textContent = `${currentItems.length} items`;
+    if (window.lucide) window.lucide.createIcons();
 }
 
-window.updateItemQty = (index, delta) => {
-    currentItems[index].qty += delta;
-    if (currentItems[index].qty <= 0) currentItems.splice(index, 1);
-    else currentItems[index].total = currentItems[index].qty * currentItems[index].price;
-    saveBillingDraft();
+window.updateQty = (idx, delta) => {
+    currentItems[idx].qty += delta;
+    if (currentItems[idx].qty <= 0) {
+        currentItems.splice(idx, 1);
+    } else {
+        currentItems[idx].total = currentItems[idx].qty * currentItems[idx].price;
+    }
     renderBillingTable();
 };
 
-window.saveBill = async (status) => {
-    const shop = document.getElementById('shop-name').value || 'Walk-in';
-    const total = parseFloat(document.getElementById('grand-total').textContent.replace(/[₹,]/g, ''));
-    if (!total) return;
-    const sale = { shop, total, status, timestamp: Date.now(), items: currentItems };
-    
-    // SAVE TO MYSQL BACKEND
-    await window.DB.addSale(sale);
-    
-    window.prepareAndPrint();
-    
-    // Clear and reset for next bill
-    clearBillingDraft(); 
-    
-    if (window.refreshDashboard) window.refreshDashboard();
-};
-
-window.prepareAndPrint = () => {
+window.saveBill = async () => {
     const shop = document.getElementById('shop-name')?.value || 'Walk-in';
-    const grandTotal = document.getElementById('grand-total')?.textContent;
-    if (currentItems.length === 0) return;
-    const itemsHtml = currentItems.map(item => `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px 0;">${item.name}</td><td style="text-align:center;">${item.qty}</td><td style="text-align:right;">${window.formatCurrency(item.price)}</td><td style="text-align:right;font-weight:bold;">${window.formatCurrency(item.total)}</td></tr>`).join('');
-    document.getElementById('print-receipt').innerHTML = receiptHTML(shop, grandTotal, itemsHtml);
-    setTimeout(() => window.print(), 100);
-};
-
-window.sendWhatsApp = (type) => {
-    const shop = document.getElementById('shop-name')?.value || 'Customer';
-    const total = document.getElementById('grand-total').textContent;
-    const phone = document.getElementById('shop-phone')?.value || '';
-    if (currentItems.length === 0) return;
+    const total = parseFloat(document.getElementById('grand-total')?.textContent.replace(/₹|,/g,'') || 0);
+    if (currentItems.length === 0) return alert("Add items first!");
     
-    if (type === 'text') {
-        let text = `*MJ FOODS BILL*\nCustomer: ${shop}\nTotal: ${total}\n\n`;
-        currentItems.forEach(i => { text += `• ${i.name} (${i.qty}) -> ${window.formatCurrency(i.total)}\n`; });
-        const waUrl = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
-        window.open(waUrl, '_blank');
+    const sale = { shop, total, status: 'Pending', timestamp: Date.now(), items: currentItems };
+    
+    try {
+        await window.DB.saveSale(sale);
+        window.sharePDF(); // Generate PDF automatically
+        alert("✅ Sale saved to cloud!");
+        clearBillingDraft();
+    } catch (e) {
+        console.error("Save Error", e);
+        window.sharePDF(); // Still allow PDF even if DB is offline
     }
-    document.getElementById('share-menu').style.display = 'none';
 };
 
-window.shareViaEmail = () => {
-    const shop = document.getElementById('shop-name').value || 'Customer';
-    const total = document.getElementById('grand-total').textContent;
-    const body = `Invoice for ${shop}\nTotal amount: ${total}`;
-    window.open(`mailto:?subject=MJ Foods Invoice&body=${encodeURIComponent(body)}`);
-    document.getElementById('share-menu').style.display = 'none';
-};
+function clearBillingDraft() {
+    currentItems = [];
+    localStorage.removeItem('mj_billing_draft_shop');
+    localStorage.removeItem('mj_billing_draft_phone');
+    initBilling();
+}
 
 window.sharePDF = async () => {
     const shop = document.getElementById('shop-name')?.value || 'Customer';
     const grandTotal = document.getElementById('grand-total')?.textContent;
     if (currentItems.length === 0) return;
     
-    // Build receipt HTML for PDF extraction
     const itemsHtml = currentItems.map(item => `
         <tr style="border-bottom:1px solid #eee;">
-            <td style="padding:10px 0;">${item.name}</td>
-            <td style="padding:10px 0;text-align:center;">${item.qty}</td>
-            <td style="padding:10px 0;text-align:right;">${window.formatCurrency(item.price)}</td>
-            <td style="padding:10px 0;text-align:right;font-weight:bold;">${window.formatCurrency(item.total)}</td>
+            <td style="padding:15px 0; font-size:14px;">${item.name}</td>
+            <td style="padding:15px 0; text-align:center; font-size:14px;">${item.qty}</td>
+            <td style="padding:15px 0; text-align:right; font-size:14px;">${window.formatCurrency(item.price)}</td>
+            <td style="padding:15px 0; text-align:right; font-weight:bold; font-size:14px;">${window.formatCurrency(item.total)}</td>
         </tr>`).join('');
     
     const receiptDiv = document.getElementById('print-receipt');
-    receiptDiv.innerHTML = receiptHTML(shop, grandTotal, itemsHtml);
+    receiptDiv.innerHTML = `
+        <div style="background:white; color:black; padding:40px; border: 1px solid #ddd;">
+            <div style="text-align:center; margin-bottom:30px;">
+                <h1 style="margin:0; font-size:28px;">MJ FOODS</h1>
+                <p style="margin:5px 0; color:#666;">Bakery & Sweets | KOTTARAKKARA</p>
+                <div style="margin:20px 0; height:2px; background:#333;"></div>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; margin-bottom:30px;">
+                <div>
+                    <div style="color:#888; text-transform:uppercase; font-size:10px; font-weight:bold;">Customer</div>
+                    <div style="font-size:18px; font-weight:bold;">${shop}</div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="color:#888; text-transform:uppercase; font-size:10px; font-weight:bold;">Date</div>
+                    <div>${new Date().toLocaleDateString()}</div>
+                </div>
+            </div>
+            
+            <table style="width:100%; border-collapse:collapse; margin-bottom:40px;">
+                <thead>
+                    <tr style="border-bottom:2px solid #333; text-align:left;">
+                        <th style="padding-bottom:10px; font-size:12px;">ITEM</th>
+                        <th style="padding-bottom:10px; text-align:center; font-size:12px;">QTY</th>
+                        <th style="padding-bottom:10px; text-align:right; font-size:12px;">PRICE</th>
+                        <th style="padding-bottom:10px; text-align:right; font-size:12px;">TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>${itemsHtml}</tbody>
+            </table>
+            
+            <div style="display:flex; justify-content:flex-end;">
+                <div style="width:200px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <span>Grand Total:</span>
+                        <span style="font-size:22px; font-weight:900;">${grandTotal}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top:60px; text-align:center; color:#888; font-size:12px; border-top:1px solid #eee; padding-top:20px;">
+                Thank you for your business! <br> MJ Foods Enterprises
+            </div>
+        </div>`;
     
     const opt = { 
-        margin: [0, 0], 
+        margin: [0.3, 0.3], 
         filename: `Invoice_${shop.replace(/ /g,'_')}.pdf`, 
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+        image: { type: 'jpeg', quality: 1 },
+        html2canvas: { scale: 3, useCORS: true, letterRendering: true },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
 
     try {
-        // Use html2pdf worker for better stability
         await html2pdf().set(opt).from(receiptDiv).save();
-        alert("✅ PDF Generated & Saved!");
+        alert("✅ PDF Generated!");
     } catch (e) { 
-        console.error("PDF Generate Error", e); 
-        alert("⚠️ PDF formation failed. Try Browser Print instead.");
+        console.error(e); 
+        alert("⚠️ PDF Error. Try Browser Print.");
     }
-    const sm = document.getElementById('share-menu');
-    if (sm) sm.style.display = 'none';
 };
-
-function receiptHTML(shop, grandTotal, itemsHtml) {
-    return `
-    <div style="font-family:'Segoe UI',Roboto,Arial,sans-serif; padding:40px; max-width:700px; margin:0 auto; color:#000; background:#fff; line-height: 1.4;">
-        <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:20px; margin-bottom:25px;">
-            <div style="display:flex; align-items:center; justify-content:center; gap:20px; margin-bottom:10px;">
-                <img src="assets/logo.jpeg" style="width:80px; height:80px; border-radius:10px; object-fit:cover;" onerror="this.style.display='none';">
-                <div style="text-align:left;">
-                    <h1 style="margin:0; font-size:2.2rem; font-weight:900; color:#000; letter-spacing:-1px;">MJ FOODS ENTERPRISES</h1>
-                    <p style="margin:2px 0; font-size:0.9rem; font-weight:600; color:#444;">19/241 Kavaraparambu, Airport Road, Angamaly-683572</p>
-                    <p style="margin:2px 0; font-size:0.85rem; color:#666;">FSSAI: 21323180000729 | Ph: +91 9495691397</p>
-                </div>
-            </div>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:30px;">
-            <div><p style="margin:0; font-size:0.8rem; color:#666; text-transform:uppercase; font-weight:bold;">Billed To:</p><h3 style="margin:3px 0; font-size:1.3rem;">${shop}</h3></div>
-            <div style="text-align:right;"><p style="margin:0; font-size:0.8rem; color:#666; text-transform:uppercase; font-weight:bold;">Invoice Details:</p><p style="margin:3px 0; font-weight:bold;">Date: ${new Date().toLocaleDateString('en-IN')}</p></div>
-        </div>
-        <table style="width:100%; border-collapse:collapse; margin-bottom:30px;">
-            <thead><tr style="border-bottom:2px solid #000; border-top:2px solid #000;"><th align="left">Description</th><th align="center">Qty</th><th align="right">Amount</th></tr></thead>
-            <tbody>${itemsHtml}</tbody>
-        </table>
-        <div style="display:flex; justify-content:flex-end;"><div style="width:250px;"><div style="display:flex; justify-content:space-between; padding:15px 0; border-bottom:3px double #000;"><span style="font-size:1.2rem; font-weight:900;">GRAND TOTAL:</span><span style="font-size:1.2rem; font-weight:900;">${grandTotal}</span></div></div></div>
-        <div style="margin-top:50px; text-align:center; border-top:1px dashed #ccc; padding-top:20px;"><p style="margin:0; font-weight:bold; font-size:1rem;">THANK YOU FOR YOUR BUSINESS!</p></div>
-    </div>`;
-}
-
-window.filterMenu = (q) => {
-    q = q.toLowerCase();
-    document.querySelectorAll('#pos-grid-container .pos-item-btn').forEach(b => {
-        b.style.display = b.querySelector('.item-name').innerText.toLowerCase().includes(q) ? 'flex' : 'none';
-    });
-};
-
-window.shareWhatsAppWeb = async () => {
-    const shop = document.getElementById('shop-name')?.value || 'Client';
-    const total = document.getElementById('grand-total').textContent;
-    const phone = document.getElementById('shop-phone')?.value || '';
-    if (currentItems.length === 0) return;
-
-    // 1. Generate & Auto-Download PDF
-    const itemsHtml = currentItems.map(item => `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px 0;">${item.name}</td><td style="text-align:center;">${item.qty}</td><td style="text-align:right;">${window.formatCurrency(item.price)}</td><td style="text-align:right;font-weight:bold;">${window.formatCurrency(item.total)}</td></tr>`).join('');
-    const receiptDiv = document.getElementById('print-receipt');
-    receiptDiv.innerHTML = receiptHTML(shop, total, itemsHtml);
-    
-    const opt = { 
-        margin: 0.5, 
-        filename: `Invoice_${shop.replace(/ /g,'_')}.pdf`, 
-        html2canvas: { scale:2 }, 
-        jsPDF: { unit:'in', format:'a4' } 
-    };
-
-    try {
-        await html2pdf().set(opt).from(receiptDiv).save();
-        
-        // 2. Open WhatsApp Web to that contact
-        const text = `Hi ${shop}, here is your MJ Foods invoice for ${total}. I have attached the PDF version.`;
-        const waUrl = phone ? `https://web.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}` : `https://web.whatsapp.com/send?text=${encodeURIComponent(text)}`;
-        
-        setTimeout(() => {
-            window.open(waUrl, '_blank');
-            alert(`✅ Invoice Downloaded Successfully!\n\nI have opened WhatsApp for you. Now just DRAG the "Invoice_${shop}.pdf" file into the chat.`);
-        }, 1000);
-    } catch (e) {
-        console.error("WhatsApp Web Share Failed", e);
-    }
-    document.getElementById('share-menu').style.display = 'none';
-};
-
-window.toggleShareMenu = (e) => {
-    e.stopPropagation();
-    const menu = document.getElementById('share-menu');
-    menu.style.display = menu.style.display === 'flex' || menu.style.display === 'block' ? 'none' : 'block';
-};
-
-window.initBilling = initBilling;
-document.addEventListener('DOMContentLoaded', initBilling);
