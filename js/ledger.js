@@ -1,9 +1,9 @@
 // Debit & Credit View Module
-window.initLedger = function() {
+window.initLedger = async function() {
     const ledgerView = document.getElementById('view-ledger');
     if (!ledgerView) return;
 
-    const sales = JSON.parse(localStorage.getItem('mj_sales') || '[]');
+    const sales = await window.DB.getSales();
     
     // Process data to group by shop and calculate debit (pending) and credit (paid)
     const shopBalances = {};
@@ -124,8 +124,8 @@ window.initLedger = function() {
     if (window.lucide) window.lucide.createIcons();
 };
 
-window.viewShopDetails = function(shopName) {
-    const sales = JSON.parse(localStorage.getItem('mj_sales') || '[]');
+window.viewShopDetails = async function(shopName) {
+    const sales = await window.DB.getSales();
     const shopSales = sales.filter(s => (s.shop || 'Walk-in Customer') === shopName).reverse();
     
     document.getElementById('modal-shop-name').textContent = shopName;
@@ -160,17 +160,13 @@ window.viewShopDetails = function(shopName) {
     document.getElementById('shop-detail-modal').style.display = 'flex';
 };
 
-window.updateStatusFromLedger = function(timestamp, newStatus, shopName) {
-    let sales = JSON.parse(localStorage.getItem('mj_sales') || '[]');
-    const index = sales.findIndex(s => s.timestamp === timestamp);
-    if(index > -1) {
-        sales[index].status = newStatus;
-        localStorage.setItem('mj_sales', JSON.stringify(sales));
-        
-        // Refresh EVERYTHING
-        window.viewShopDetails(shopName);
-        window.initLedger();
-        if (window.refreshDashboard) window.refreshDashboard();
-        if (window.initHistory) window.initHistory();
-    }
+window.updateStatusFromLedger = async function(timestamp, newStatus, shopName) {
+    await window.DB.updateSaleStatus(timestamp, newStatus);
+    await window.DB.getSales();
+
+    // Refresh EVERYTHING
+    window.viewShopDetails(shopName);
+    window.initLedger();
+    if (window.refreshDashboard) window.refreshDashboard();
+    if (window.initHistory) window.initHistory();
 };

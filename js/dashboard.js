@@ -16,16 +16,17 @@ window.refreshDashboard = async function() {
     // 2. Then, fetch fresh data from the Cloud
     if (window.DB) {
         try {
-            const [sales, exps] = await Promise.all([
+            const [sales, exps, receipts] = await Promise.all([
                 window.DB.getSales(),
-                window.DB.getExpenses()
+                window.DB.getExpenses(),
+                window.DB.getReceipts()
             ]);
             // Re-render with the latest Cloud data
             renderView(
                 sales, 
                 exps, 
                 JSON.parse(localStorage.getItem('mj_emp_ledger') || '[]'),
-                JSON.parse(localStorage.getItem('mj_receipts') || '[]')
+                receipts
             );
         } catch (e) {
             console.warn("⚠️ Dashboard could not sync with cloud.", e);
@@ -391,14 +392,29 @@ window.switchProfitPeriod = (period) => {
     window.refreshDashboard();
 };
 
-window.recordDashboardExpense = () => {
+window.recordDashboardExpense = async () => {
     const category = document.getElementById('dash-exp-category').value;
     const amt = parseFloat(document.getElementById('dash-exp-amt').value);
     if (!amt || amt <= 0) return alert('Enter a valid amount');
-    const expense = { id: Date.now(), category, amt, note: 'Added via Dashboard', timestamp: Date.now() };
-    let exps = JSON.parse(localStorage.getItem('mj_expenses') || '[]');
-    exps.push(expense);
-    localStorage.setItem('mj_expenses', JSON.stringify(exps));
+    
+    const expense = { 
+        category, 
+        amt, 
+        note: 'Added via Dashboard', 
+        timestamp: Date.now() 
+    };
+
+    // Save to SQL
+    if (window.DB) {
+        await window.DB.addExpense(expense);
+        await window.DB.getExpenses(); // Refresh cache
+    } else {
+        // Fallback
+        let exps = JSON.parse(localStorage.getItem('mj_expenses') || '[]');
+        exps.push({ id: Date.now(), ...expense });
+        localStorage.setItem('mj_expenses', JSON.stringify(exps));
+    }
+
     document.getElementById('dash-exp-amt').value = '';
     window.refreshDashboard();
     if (window.showExpToast) window.showExpToast(`Recorded ₹${amt} expense`, 'success');
@@ -428,23 +444,45 @@ function buildPendingExpensesSection(receipts) {
     return `<div class="card" style="border-top:4px solid #ef4444;"><div class="flex-between mb-3"><h3>Pending Vendor Bills</h3><span style="font-weight:900;color:#f87171;">${window.formatCurrency(totalUnpaid)}</span></div><div>${rows}</div></div>`;
 }
 
-window.dashMarkReceiptPaid = (id) => {
-    let receipts = JSON.parse(localStorage.getItem('mj_receipts') || '[]');
-    const r = receipts.find(r => r.id === id);
-    if (r) { r.paid = true; localStorage.setItem('mj_receipts', JSON.stringify(receipts)); window.refreshDashboard(); }
+window.dashMarkReceiptPaid = async (id) => {
+    const receipts = await window.DB.getReceipts();
+    const r = receipts.find(r => String(r.id) === String(id));
+    if (r) { 
+        await window.DB.updateReceipt(id, {
+            shop: r.shop,
+            amt: r.amt,
+            date_val: r.date_val || r.dateVal,
+            category: r.category,
+            paid: true,
+            note: r.note || '',
+            photo_url: r.photo_url || r.photo || ''
+        });
+        window.refreshDashboard(); 
+    }
 };
 
-window.deleteInvoice = (timestamp) => {
+window.deleteInvoice = async (timestamp) => {
     if(!confirm("Permenantly delete this record? This cannot be undone.")) return;
-    let sales = JSON.parse(localStorage.getItem('mj_sales') || '[]');
-    sales = sales.filter(s => s.timestamp !== timestamp);
-    localStorage.setItem('mj_sales', JSON.stringify(sales));
+    await window.DB.deleteSale(timestamp);
+    await window.DB.getSales();
     window.refreshDashboard();
     if(window.initHistory) window.initHistory();
+    if (window.initLedger) window.initLedger();
 };
 
-window.markInvoicePaid = (timestamp) => {
-    let sales = JSON.parse(localStorage.getItem('mj_sales') || '[]');
-    const idx = sales.findIndex(s => s.timestamp === timestamp);
-    if(idx > -1) { sales[idx].status = 'Paid'; localStorage.setItem('mj_sales', JSON.stringify(sales)); window.refreshDashboard(); if(window.initHistory) window.initHistory(); }
+window.markInvoicePaid = async (timestamp) => {
+    if (window.DB) {
+        await window.DB.updateSaleStatus(timestamp, 'Paid');
+        await window.DB.getSales();
+    } else {
+        let sales = JSON.parse(localStorage.getItem('mj_sales') || '[]');
+        const idx = sales.findIndex(s => s.timestamp === timestamp);
+        if(idx > -1) { 
+            sales[idx].status = 'Paid'; 
+            localStorage.setItem('mj_sales', JSON.stringify(sales)); 
+        }
+    }
+    
+    window.refreshDashboard(); 
+    if(window.initHistory) window.initHistory(); 
 };

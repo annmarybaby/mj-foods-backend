@@ -97,122 +97,13 @@ window.deleteInvoice = async function(id) {
 };
 
 window.sharePastInvoicePDF = async (id) => {
-    const sales = JSON.parse(localStorage.getItem('mj_sales') || '[]');
+    // 1. Fetch sales from DB to get the most accurate data
+    const sales = await window.DB.getSales();
     const sale = sales.find(s => s.id == id);
+    
     if (!sale || !sale.items) return alert("Invoice details not found!");
-    
-    const shop = sale.shop_name || "Walk-in Customer";
-    const grandTotal = window.formatCurrency(sale.total_amount);
-    const saleDate = new Date(sale.timestamp || Date.now());
-    
-    let itemsHtml = sale.items.map(item => `
-        <tr style="border-bottom: 1px solid #eee;">
-            <td style="padding: 10px 0; font-size: 0.95rem;">${item.name}</td>
-            <td style="padding: 10px 0; text-align: center; font-size: 0.95rem;">${item.qty}</td>
-            <td style="padding: 10px 0; text-align: right; font-size: 0.95rem;">${window.formatCurrency(item.price)}</td>
-            <td style="padding: 10px 0; text-align: right; font-weight: bold; font-size: 0.95rem;">${window.formatCurrency(item.total)}</td>
-        </tr>
-    `).join('');
 
-    const receiptDiv = document.getElementById('print-receipt');
-    receiptDiv.innerHTML = `<div style="font-family:'Segoe UI',Roboto,Arial,sans-serif; padding:40px; max-width:700px; margin:0 auto; color:#000; background:#fff; line-height: 1.4;">
-        <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:20px; margin-bottom:25px;">
-            <div style="display:flex; align-items:center; justify-content:center; gap:20px; margin-bottom:10px;">
-                <img src="assets/logo.jpeg" style="width:80px; height:80px; border-radius:10px; object-fit:cover;" onerror="this.style.display='none';">
-                <div style="text-align:left;">
-                    <h1 style="margin:0; font-size:2.2rem; font-weight:900; color:#000; letter-spacing:-1px;">MJ FOODS ENTERPRISES</h1>
-                    <p style="margin:2px 0; font-size:0.9rem; font-weight:600; color:#444;">19/241 Kavaraparambu, Airport Road, Angamaly-683572</p>
-                    <p style="margin:2px 0; font-size:0.85rem; color:#666;">FSSAI: 21323180000729 | Ph: +91 9495691397</p>
-                </div>
-            </div>
-        </div>
-        
-        <div style="display:flex; justify-content:space-between; margin-bottom:30px;">
-            <div>
-                <p style="margin:0; font-size:0.8rem; color:#666; text-transform:uppercase; font-weight:bold;">Billed To:</p>
-                <h3 style="margin:3px 0; font-size:1.3rem;">${shop}</h3>
-            </div>
-            <div style="text-align:right;">
-                <p style="margin:0; font-size:0.8rem; color:#666; text-transform:uppercase; font-weight:bold;">Invoice Details:</p>
-                <p style="margin:3px 0; font-weight:bold;">Date: ${saleDate.toLocaleDateString('en-IN')}</p>
-                <p style="margin:0; font-size:0.9rem; color:#444;">Time: ${saleDate.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</p>
-            </div>
-        </div>
-
-        <table style="width:100%; border-collapse:collapse; margin-bottom:30px;">
-            <thead>
-                <tr style="border-bottom:2px solid #000; border-top:2px solid #000;">
-                    <th style="padding:12px 5px; text-align:left; font-size:0.85rem; text-transform:uppercase;">Description</th>
-                    <th style="padding:12px 5px; text-align:center; font-size:0.85rem; text-transform:uppercase;">Qty</th>
-                    <th style="padding:12px 5px; text-align:right; font-size:0.85rem; text-transform:uppercase;">Rate</th>
-                    <th style="padding:12px 5px; text-align:right; font-size:0.85rem; text-transform:uppercase;">Amount</th>
-                </tr>
-            </thead>
-            <tbody>${itemsHtml}</tbody>
-        </table>
-
-        <div style="display:flex; justify-content:flex-end;">
-            <div style="width:250px;">
-                <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #ddd;">
-                    <span style="font-weight:bold;">Total Amount:</span>
-                    <span style="font-weight:bold;">${grandTotal}</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; padding:15px 0; margin-top:5px; border-bottom:3px double #000;">
-                    <span style="font-size:1.2rem; font-weight:900;">GRAND TOTAL:</span>
-                    <span style="font-size:1.2rem; font-weight:900;">${grandTotal}</span>
-                </div>
-            </div>
-        </div>
-
-        <div style="margin-top:50px; text-align:center; border-top:1px dashed #ccc; padding-top:20px;">
-            <p style="margin:0; font-weight:bold; font-size:1rem;">THANK YOU FOR YOUR BUSINESS!</p>
-            <p style="margin:5px 0 0; font-size:0.85rem; color:#666;">MJ Foods — Quality & Trust</p>
-        </div>
-    </div>`;
-
-    const originalDisplay = receiptDiv.style.display;
-    const originalPos = receiptDiv.style.position;
-    const originalLeft = receiptDiv.style.left;
-    const originalTop = receiptDiv.style.top;
-    
-    receiptDiv.style.display = 'block';
-    receiptDiv.style.position = 'absolute';
-    receiptDiv.style.left = '-9999px';
-    receiptDiv.style.top = '-9999px';
-
-    const opt = {
-        margin:       [0.5, 0.5],
-        filename:     `Invoice_${shop.replace(/[^a-zA-Z0-9]/g, '_')}_${timestamp}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 3, useCORS: true, letterRendering: true },
-        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
-    };
-
-    try {
-        const pdfBlob = await html2pdf().set(opt).from(receiptDiv).output('blob');
-        
-        receiptDiv.style.display = originalDisplay;
-        receiptDiv.style.position = originalPos;
-        receiptDiv.style.left = originalLeft;
-        receiptDiv.style.top = originalTop;
-
-        const file = new File([pdfBlob], opt.filename, { type: 'application/pdf' });
-        
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-                title: 'Invoice from MJ Foods',
-                text: 'Here is your invoice from MJ Foods.',
-                files: [file]
-            });
-        } else {
-            console.log("Direct share not supported, saving.");
-            html2pdf().set(opt).from(receiptDiv).save();
-        }
-    } catch (err) {
-        console.error('Error sharing past PDF:', err);
-        receiptDiv.style.display = originalDisplay;
-        receiptDiv.style.position = originalPos;
-        receiptDiv.style.left = originalLeft;
-        receiptDiv.style.top = originalTop;
-    }
+    // 2. The unified generator handles everything
+    return await window.shareInvoiceWhatsApp(sale);
 };
+

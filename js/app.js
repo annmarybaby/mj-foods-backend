@@ -39,6 +39,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const navItems = document.querySelectorAll('.nav-item');
     const views = document.querySelectorAll('.view');
     const viewTitle = document.getElementById('view-title');
+    const viewSubtitle = document.getElementById('view-subtitle');
+    const viewDescriptions = {
+        dashboard: 'Daily overview of sales, pending bills and expenses.',
+        billing: 'Choose a shop, add items quickly, save the invoice and download it.',
+        employees: 'Store employee details, phone numbers, wages and daily payments.',
+        expenses: 'Track unit expenses and supplier bills in one clear place.',
+        history: 'Review past invoices, payment status and full bill details.',
+        ledger: 'See shop-wise balances, dues and payment status clearly.'
+    };
 
     navItems.forEach(item => {
         item.addEventListener('click', () => {
@@ -65,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Update Header Title
             if (viewTitle) viewTitle.textContent = item.querySelector('.text').textContent;
+            if (viewSubtitle) viewSubtitle.textContent = viewDescriptions[item.dataset.view] || 'Manage daily operations with clear steps.';
 
             // Trigger view-specific refresh if needed...
             if (targetId === 'view-dashboard' && window.refreshDashboard) {
@@ -92,6 +102,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dateEl) {
         setInterval(updateTime, 60000);
         updateTime();
+    }
+
+    const activeItem = document.querySelector('.nav-item.active');
+    if (activeItem && viewSubtitle) {
+        viewSubtitle.textContent = viewDescriptions[activeItem.dataset.view] || 'Manage daily operations with clear steps.';
     }
 
     // Init modules

@@ -199,7 +199,7 @@ function initExpenses() {
 
                 <!-- Receipts Grid -->
                 <h3 class="mb-4" style="display:flex; align-items:center; gap:8px;"><i data-lucide="layout-grid"></i> Uploaded Bill Receipts</h3>
-                <div id="receipts-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;"></div>
+                <div id="receipts-grid" class="receipts-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;"></div>
             </div>
         </div>
     `;
@@ -346,7 +346,7 @@ window.clearPhotoPreview = () => {
 }
 
 // ── Add Receipt ───────────────────────────────────────────────────────────────
-window.addReceipt = () => {
+window.addReceipt = async () => {
     const shop     = document.getElementById('rec-shop').value.trim();
     const amt      = parseFloat(document.getElementById('rec-amt').value);
     const dateVal  = document.getElementById('rec-date').value;
@@ -361,14 +361,13 @@ window.addReceipt = () => {
 
     const receipt = {
         id: Date.now(),
-        shop, amt, dateVal, category, note, paid,
+        shop, amt, dateVal, date_val: dateVal, category, note, paid,
         photo: _pendingPhoto || null,
+        photo_url: _pendingPhoto || null,
         timestamp: Date.now()
     };
 
-    let receipts = JSON.parse(localStorage.getItem('mj_receipts') || '[]');
-    receipts.push(receipt);
-    localStorage.setItem('mj_receipts', JSON.stringify(receipts));
+    await window.DB.addReceipt(receipt);
 
     // Reset
     document.getElementById('rec-shop').value = '';
@@ -376,27 +375,36 @@ window.addReceipt = () => {
     document.getElementById('rec-note').value = '';
     window.clearPhotoPreview();
 
-    renderReceipts();
+    await renderReceipts();
     showExpToast(`Receipt from "${shop}" saved!`, 'success');
+    if (window.refreshDashboard) window.refreshDashboard();
 };
 
-window.toggleReceiptPaid = (id) => {
-    let receipts = JSON.parse(localStorage.getItem('mj_receipts') || '[]');
-    const r = receipts.find(r => r.id === id);
+window.toggleReceiptPaid = async (id) => {
+    const receipts = await window.DB.getReceipts();
+    const r = receipts.find(r => String(r.id) === String(id));
     if (!r) return;
-    r.paid = !r.paid;
-    localStorage.setItem('mj_receipts', JSON.stringify(receipts));
-    renderReceipts();
-    showExpToast(r.paid ? 'Marked as Paid' : 'Marked as Pending', 'success');
+    const nextPaid = !r.paid;
+    await window.DB.updateReceipt(id, {
+        shop: r.shop,
+        amt: r.amt,
+        date_val: r.date_val || r.dateVal,
+        category: r.category,
+        paid: nextPaid,
+        note: r.note || '',
+        photo_url: r.photo_url || r.photo || ''
+    });
+    await renderReceipts();
+    showExpToast(nextPaid ? 'Marked as Paid' : 'Marked as Pending', 'success');
+    if (window.refreshDashboard) window.refreshDashboard();
 };
 
-window.deleteReceipt = (id) => {
+window.deleteReceipt = async (id) => {
     if (!confirm('Delete this receipt?')) return;
-    let receipts = JSON.parse(localStorage.getItem('mj_receipts') || '[]');
-    receipts = receipts.filter(r => r.id !== id);
-    localStorage.setItem('mj_receipts', JSON.stringify(receipts));
-    renderReceipts();
+    await window.DB.deleteReceipt(id);
+    await renderReceipts();
     showExpToast('Receipt deleted.', 'info');
+    if (window.refreshDashboard) window.refreshDashboard();
 };
 
 // ── Lightbox ──────────────────────────────────────────────────────────────────
@@ -426,8 +434,15 @@ function getCategoryIcon(cat) {
     return `<i data-lucide="${icons[cat] || 'package'}" style="width:16px;"></i>`;
 }
 
-function renderReceipts() {
-    const all = JSON.parse(localStorage.getItem('mj_receipts') || '[]').sort((a,b) => b.timestamp - a.timestamp);
+async function renderReceipts() {
+    const fetched = await window.DB.getReceipts();
+    const all = (Array.isArray(fetched) ? fetched : []).map(r => ({
+        ...r,
+        amt: parseFloat(r.amt || 0),
+        paid: !!r.paid,
+        dateVal: r.dateVal || r.date_val,
+        photo: r.photo || r.photo_url || null
+    })).sort((a,b) => b.timestamp - a.timestamp);
     const filtered = _receiptFilter === 'all' ? all : all.filter(r => _receiptFilter === 'paid' ? r.paid : !r.paid);
     const grid = document.getElementById('receipts-grid');
     const stats = document.getElementById('receipt-stats');
@@ -498,18 +513,14 @@ window.addExpense = async () => {
 
 window.deleteExpense = (id) => {
     if (!confirm('Delete this record?')) return;
-    let exps = JSON.parse(localStorage.getItem('mj_expenses') || '[]');
-    exps = exps.filter(e => e.id !== id);
-    localStorage.setItem('mj_expenses', JSON.stringify(exps));
-    renderExpenses();
-    if (window.refreshDashboard) window.refreshDashboard();
+    window.DB.deleteExpense(id).then(() => {
+        renderExpenses();
+        if (window.refreshDashboard) window.refreshDashboard();
+    });
 };
 
 window.clearAllExpenses = () => {
-    if (!confirm('Clear all expense records?')) return;
-    localStorage.removeItem('mj_expenses');
-    renderExpenses();
-    if (window.refreshDashboard) window.refreshDashboard();
+    showExpToast('Clear all is disabled for shared cloud data.', 'info');
 };
 
 async function renderExpenses() {
