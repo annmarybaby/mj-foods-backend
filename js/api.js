@@ -7,7 +7,7 @@ const API_BASE = (
     window.location.hostname === '127.0.0.1' || 
     window.location.hostname.startsWith('192.168.') ||
     window.location.protocol === 'file:'
-) ? 'http://localhost:3000/api' : 'https://mj-foods-backend.onrender.com/api'; 
+) ? 'http://localhost:3000/api' : 'https://mj-foods-backend-1.onrender.com/api'; 
 
 function readJson(key, fallback) {
     try {
